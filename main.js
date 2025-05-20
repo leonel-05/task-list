@@ -33,6 +33,36 @@ document.addEventListener('DOMContentLoaded', function(){
             nuevaTarea.appendChild(descripcionSpan);
         }
 
+        const botonEditar = document.createElement('button');
+        botonEditar.textContent = 'Editar';
+        botonEditar.addEventListener('click', function() {
+            const nuevoTexto = prompt('Editar tarea:', texto);
+            const nuevaDescripción = prompt('Editar descripción:', descripcion);
+
+            if (nuevoTexto !== null & nuevoTexto.trim() !== "") {
+                //Actualizar el texto visible
+                nuevaTarea.childNodes[0].textContent = nuevoTexto;
+            }
+
+            if (nuevaDescripción !== null) {
+                if  (nuevaTarea.querySelector('span')) {
+                    nuevaTarea.querySelector('span').textContent = ` - ${nuevaDescripción}`;
+                } else if (nuevaDescripción.trim() !== "") {
+                    const descripcionSpan = document.createElement('span');
+                    descripcionSpan.textContent = ` - ${nuevaDescripción}`;
+                    nuevaTarea.insertBefore(descripcionSpan, botonCompletar)
+                }
+            }
+
+            // Actualiza localStorage
+            editarTareaEnLocalStorage(texto, descripcion, nuevoTexto, nuevaDescripcion || '');
+
+            // Actualiza los valores originales para que botones "Completar" y "Eliminar" sigan funcionando
+            texto = nuevoTexto;
+            descripcion = nuevaDescripcion || '';
+        });
+
+
         const botonCompletar = document.createElement('button');
         botonCompletar.textContent = 'Completar';
         botonCompletar.addEventListener('click', function(){
@@ -47,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function(){
             eliminarTareaDeLocalStorage(texto, descripcion);
         });
 
+        nuevaTarea.appendChild(botonEditar);
         nuevaTarea.appendChild(botonCompletar);
         nuevaTarea.appendChild(botonEliminar);
         listaTarea.appendChild(nuevaTarea);
@@ -94,5 +125,16 @@ document.addEventListener('DOMContentLoaded', function(){
         // Filtrar las tareas para eliminar la tarea correspondiente
         const tareasFiltradas = tareas.filter(tarea => !(tarea.texto === texto && tarea.descripcion === descripcion));
         localStorage.setItem('tareas', JSON.stringify(tareasFiltradas));
+    }
+
+    function editarTareaEnLocalStorage(textoAntiguo, descripcionAntigua, textoNuevo, descripcionNueva) {
+        const tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+    
+        const tarea = tareas.find(t => t.texto === textoAntiguo && t.descripcion === descripcionAntigua);
+        if (tarea) {
+            tarea.texto = textoNuevo;
+            tarea.descripcion = descripcionNueva;
+            localStorage.setItem('tareas', JSON.stringify(tareas));
+        }
     }
 });
