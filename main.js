@@ -24,65 +24,96 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
     function agregarTarea(texto, descripcion) {
-        const nuevaTarea = document.createElement('li');
-        nuevaTarea.textContent = texto;
+    const nuevaTarea = document.createElement('li');
+    nuevaTarea.textContent = texto;
 
-        let descripcionSpan = null;
-            if (descripcion !== '') {
-            descripcionSpan = document.createElement('span');
-            descripcionSpan.textContent = ` - ${descripcion}`;
-            nuevaTarea.appendChild(descripcionSpan);
+    let descripcionSpan = null;
+    if (descripcion !== '') {
+        descripcionSpan = document.createElement('span');
+        descripcionSpan.textContent = ` - ${descripcion}`;
+        nuevaTarea.appendChild(descripcionSpan);
+    }
+
+    // Crear el formulario de edición ANTES de los botones
+    const formEdicion = document.createElement('form');
+    formEdicion.style.display = 'none';
+
+    const inputEditarTarea = document.createElement('input');
+    inputEditarTarea.type = 'text';
+    inputEditarTarea.value = texto;
+    inputEditarTarea.style.marginRight = '10px';
+
+    const inputEditarDescripcion = document.createElement('input');
+    inputEditarDescripcion.type = 'text';
+    inputEditarDescripcion.value = descripcion;
+    inputEditarDescripcion.style.marginRight = '10px';
+
+    const botonGuardarCambios = document.createElement('button');
+    botonGuardarCambios.textContent = 'Guardar';
+    botonGuardarCambios.type = 'submit';
+
+    formEdicion.appendChild(inputEditarTarea);
+    formEdicion.appendChild(inputEditarDescripcion);
+    formEdicion.appendChild(botonGuardarCambios);
+
+    // Evento de submit del formulario
+    formEdicion.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const nuevoTexto = inputEditarTarea.value.trim();
+        const nuevaDescripcion = inputEditarDescripcion.value.trim();
+
+        if (nuevoTexto !== '') {
+            nuevaTarea.childNodes[0].textContent = nuevoTexto;
+            if (descripcionSpan) {
+                descripcionSpan.textContent = ` - ${nuevaDescripcion}`;
+            } else if (nuevaDescripcion !== '') {
+                descripcionSpan = document.createElement('span');
+                descripcionSpan.textContent = ` - ${nuevaDescripcion}`;
+                nuevaTarea.insertBefore(descripcionSpan, botonEditar);
+            }
+
+            editarTareaEnLocalStorage(texto, descripcion, nuevoTexto, nuevaDescripcion);
+
+            // Actualizar valores para futuras ediciones
+            texto = nuevoTexto;
+            descripcion = nuevaDescripcion;
         }
 
-        const botonEditar = document.createElement('button');
-        botonEditar.textContent = 'Editar';
+        formEdicion.style.display = 'none';
+    });
 
-        const botonCompletar = document.createElement('button');
-        botonCompletar.textContent = 'Completar';
+    // Botones
+    const botonEditar = document.createElement('button');
+    botonEditar.textContent = 'Editar';
+    botonEditar.addEventListener('click', function () {
+        formEdicion.style.display = formEdicion.style.display === 'none' ? 'block' : 'none';
+    });
 
-        const botonEliminar = document.createElement('button');
-        botonEliminar.textContent = 'Eliminar';
+    const botonCompletar = document.createElement('button');
+    botonCompletar.textContent = 'Completar';
+    botonCompletar.addEventListener('click', function () {
+        nuevaTarea.classList.toggle('completed');
+        actualizarTareaEnLocalStorage(texto, descripcion, nuevaTarea.classList.contains('completed'));
+    });
 
-        botonEditar.addEventListener('click', function () {
-            const nuevoTexto = prompt('Editar tarea:', texto);
-            const nuevaDescripcion = prompt('Editar descripción:', descripcion);
+    const botonEliminar = document.createElement('button');
+    botonEliminar.textContent = 'Eliminar';
+    botonEliminar.addEventListener('click', function () {
+        listaTarea.removeChild(nuevaTarea);
+        eliminarTareaDeLocalStorage(texto, descripcion);
+    });
 
-            if (nuevoTexto !== null && nuevoTexto.trim() !== "") {
-            nuevaTarea.childNodes[0].textContent = nuevoTexto;
-            }
+    // Agregar todo al <li>
+    nuevaTarea.appendChild(botonEditar);
+    nuevaTarea.appendChild(botonCompletar);
+    nuevaTarea.appendChild(botonEliminar);
+    nuevaTarea.appendChild(formEdicion);
 
-            if (nuevaDescripcion !== null) {
-                if (descripcionSpan) {
-                descripcionSpan.textContent = ` - ${nuevaDescripcion}`;
-                } else if (nuevaDescripcion.trim() !== "") {
-                    descripcionSpan = document.createElement('span');
-                    descripcionSpan.textContent = ` - ${nuevaDescripcion}`;
-                    nuevaTarea.insertBefore(descripcionSpan, botonEditar);
-                }
-            }
+    // Agregar a la lista
+    listaTarea.appendChild(nuevaTarea);
+}
 
-            editarTareaEnLocalStorage(texto, descripcion, nuevoTexto.trim(), nuevaDescripcion.trim() || '');
-
-            // Actualizar variables para que otros botones funcionen correctamente
-            texto = nuevoTexto.trim();
-            descripcion = nuevaDescripcion.trim();
-        });
-
-        botonCompletar.addEventListener('click', function () {
-            nuevaTarea.classList.toggle('completed');
-            actualizarTareaEnLocalStorage(texto, descripcion, nuevaTarea.classList.contains('completed'));
-        });
-
-        botonEliminar.addEventListener('click', function () {
-            listaTarea.removeChild(nuevaTarea);
-            eliminarTareaDeLocalStorage(texto, descripcion);
-        });
-
-        nuevaTarea.appendChild(botonEditar);
-        nuevaTarea.appendChild(botonCompletar);
-        nuevaTarea.appendChild(botonEliminar);
-        listaTarea.appendChild(nuevaTarea);
-    }
 
 
     function cargarTareas() {
