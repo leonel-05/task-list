@@ -23,56 +23,57 @@ document.addEventListener('DOMContentLoaded', function(){
         inputDescripcion.value = '';
     });
 
-    function agregarTarea(texto, descripcion){
+    function agregarTarea(texto, descripcion) {
         const nuevaTarea = document.createElement('li');
         nuevaTarea.textContent = texto;
 
-        if (descripcion !== '') {
-            const descripcionSpan = document.createElement('span');
+        let descripcionSpan = null;
+            if (descripcion !== '') {
+            descripcionSpan = document.createElement('span');
             descripcionSpan.textContent = ` - ${descripcion}`;
             nuevaTarea.appendChild(descripcionSpan);
         }
 
         const botonEditar = document.createElement('button');
         botonEditar.textContent = 'Editar';
-        botonEditar.addEventListener('click', function() {
-            const nuevoTexto = prompt('Editar tarea:', texto);
-            const nuevaDescripción = prompt('Editar descripción:', descripcion);
-
-            if (nuevoTexto !== null & nuevoTexto.trim() !== "") {
-                //Actualizar el texto visible
-                nuevaTarea.childNodes[0].textContent = nuevoTexto;
-            }
-
-            if (nuevaDescripción !== null) {
-                if  (nuevaTarea.querySelector('span')) {
-                    nuevaTarea.querySelector('span').textContent = ` - ${nuevaDescripción}`;
-                } else if (nuevaDescripción.trim() !== "") {
-                    const descripcionSpan = document.createElement('span');
-                    descripcionSpan.textContent = ` - ${nuevaDescripción}`;
-                    nuevaTarea.insertBefore(descripcionSpan, botonCompletar)
-                }
-            }
-
-            // Actualiza localStorage
-            editarTareaEnLocalStorage(texto, descripcion, nuevoTexto, nuevaDescripcion || '');
-
-            // Actualiza los valores originales para que botones "Completar" y "Eliminar" sigan funcionando
-            texto = nuevoTexto;
-            descripcion = nuevaDescripcion || '';
-        });
-
 
         const botonCompletar = document.createElement('button');
         botonCompletar.textContent = 'Completar';
-        botonCompletar.addEventListener('click', function(){
+
+        const botonEliminar = document.createElement('button');
+        botonEliminar.textContent = 'Eliminar';
+
+        botonEditar.addEventListener('click', function () {
+            const nuevoTexto = prompt('Editar tarea:', texto);
+            const nuevaDescripcion = prompt('Editar descripción:', descripcion);
+
+            if (nuevoTexto !== null && nuevoTexto.trim() !== "") {
+            nuevaTarea.childNodes[0].textContent = nuevoTexto;
+            }
+
+            if (nuevaDescripcion !== null) {
+                if (descripcionSpan) {
+                descripcionSpan.textContent = ` - ${nuevaDescripcion}`;
+                } else if (nuevaDescripcion.trim() !== "") {
+                    descripcionSpan = document.createElement('span');
+                    descripcionSpan.textContent = ` - ${nuevaDescripcion}`;
+                    nuevaTarea.insertBefore(descripcionSpan, botonEditar);
+                }
+            }
+
+            editarTareaEnLocalStorage(texto, descripcion, nuevoTexto.trim(), nuevaDescripcion.trim() || '');
+
+            // Actualizar variables para que otros botones funcionen correctamente
+            texto = nuevoTexto.trim();
+            descripcion = nuevaDescripcion.trim();
+        });
+
+        botonCompletar.addEventListener('click', function () {
             nuevaTarea.classList.toggle('completed');
             actualizarTareaEnLocalStorage(texto, descripcion, nuevaTarea.classList.contains('completed'));
         });
 
-        const botonEliminar = document.createElement('button');
-        botonEliminar.textContent = 'Eliminar';
-        botonEliminar.addEventListener('click', function(){
+        botonEliminar.addEventListener('click', function () {
             listaTarea.removeChild(nuevaTarea);
             eliminarTareaDeLocalStorage(texto, descripcion);
         });
@@ -82,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function(){
         nuevaTarea.appendChild(botonEliminar);
         listaTarea.appendChild(nuevaTarea);
     }
+
 
     function cargarTareas() {
         // Obtener las tareas almacenadas en localStorage
